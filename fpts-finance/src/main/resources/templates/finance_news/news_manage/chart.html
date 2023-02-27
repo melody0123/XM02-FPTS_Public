@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" >
+<head>
+    <th:block th:include="include :: header('财经新闻图表')" />
+    <th:block th:include="include :: datetimepicker-css" />
+    <!-- bootstrap-table 表格插件样式 -->
+
+</head>
+<body class="white-bg">
+<!-- 为 ECharts 准备一个定义了宽高的 DOM -->
+<div id="main" style="width: 800px;height:500px;"></div>
+<script th:src="@{/js/echarts.js}"></script>
+<script th:inline="javascript">
+    // 基于准备好的dom，初始化echarts实例
+    var myChart = echarts.init(document.getElementById('main'));
+    var cntList = [[${cntList}]];
+    console.log(cntList);
+
+    var dateList = [[${dateList}]];
+    console.log(dateList);
+
+    // 指定图表的配置项和数据
+    var option = {
+        title: {
+            text: '财经新闻发布日期统计'
+        },
+        tooltip: {},
+        legend: {
+            data: ['发布新闻个数']
+        },
+        xAxis: {
+            name: '发布日期',
+            data: dateList
+        },
+        yAxis: {},
+        series: [
+            {
+                name: '发布新闻个数',
+                type: 'line',
+                data: cntList
+            }
+        ]
+    };
+
+    // 使用刚指定的配置项和数据显示图表。
+    myChart.setOption(option);
+</script>
+</body>
+</html>

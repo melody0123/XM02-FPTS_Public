@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" >
+<head>
+    <th:block th:include="include :: header('数据仓库')" />
+    <th:block th:include="include :: datetimepicker-css" />
+</head>
+<style>
+    @media print {
+        .noprint {
+            display: none;
+        }
+        @page{
+            size: A3;
+            margin: 0;
+        }
+    }
+</style>
+<body>
+
+<div class="col-sm-12 select-table" style="text-align: center; ">
+    <table id="bootstrap-table" class="table table-bordered" style="width: 600px; height: auto; margin: 0 auto;"></table>
+</div>
+<div style="text-align: right; ">
+    <button onclick="print()" class="noprint">确定打印</button>
+</div>
+
+
+<th:block th:include="include :: footer" />
+<script th:inline="javascript">
+    var prefix = ctx + "finance_warehouse/finance_warehouse";
+    var typeDatas = [[${@dict.getType('product_type')}]];
+    $(function() {
+        var options = {
+            url: prefix + "/printToHtml",
+
+            modalName: "数据仓库",
+            striped:true,
+            pagination:false,
+            search:false,
+            showSearch:false,
+            showRefresh:false,
+            showToggle:false,
+            showExport:false,
+            showColumns:false,
+            showPrint:false,
+            cardView:false,
+            detailView:false,
+            columns: [
+                {
+                    field: 'id',
+                    title: '编号',
+                    visible: false
+                },
+                {
+                    field: 'productId',
+                    title: '代码'
+                },
+                {
+                    field: 'name',
+                    title: '名称'
+                },
+                {
+                    field: 'type',
+                    title: '类型',
+                    formatter: function(value, row, index) {
+                        return $.table.selectDictLabel(typeDatas, value);
+                    }
+                },
+                {
+                    field: 'newPrice',
+                    title: '最新价'
+                },
+                {
+                    field: 'openPrice',
+                    title: '开盘价'
+                },
+                {
+                    field: 'yesterdayPrice',
+                    title: '昨日结算'
+                },
+                {
+                    field: 'maxPrice',
+                    title: '最高价'
+                },
+                {
+                    field: 'minPrice',
+                    title: '最低价'
+                },
+                {
+                    field: 'increase',
+                    title: '涨幅'
+                },
+                {
+                    field: 'increaseRate',
+                    title: '涨速'
+                },
+                {
+                    field: 'turnoverRate',
+                    title: '换手率'
+                },
+            ]
+        };
+        $.table.init(options);
+    });
+
+
+</script>
+</body>
+</html>

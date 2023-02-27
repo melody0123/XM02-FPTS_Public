@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+    <th:block th:include="include :: header('用户反馈列表')" />
+</head>
+<body class="gray-bg" style="background-color: #e0f8f8">
+     <div class="container-div">
+        <div class="row">
+            <div class="col-sm-12 search-collapse">
+                <form id="formId">
+                    <div class="select-list">
+                        <ul>
+                            <li>
+                                <label>用户ID：</label>
+                                <input type="text" name="userId"/>
+                            </li>
+                            <li class="select-time">
+                                <label>反馈时间：</label>
+                                <input type="text" class="time-input" id="userFeedbackTime" placeholder="" name="params[UserFeedbackCreatetime]"/>
+<!--                                <span>-</span>-->
+<!--                                <input type="text" class="time-input" id="endTime" placeholder="结束时间" name="params[endUserFeedbackCreatetime]"/>-->
+                            </li>
+                            <li class="select-time">
+                                <label>回复时间：</label>
+                                <input type="text" class="time-input" id="adminFeedbackTime" placeholder="" name="params[AdminFeedbackCreatetime]"/>
+<!--                                <span>-</span>-->
+<!--                                <input type="text" class="time-input" id="endTime" placeholder="结束时间" name="params[endAdminFeedbackCreatetime]"/>-->
+                            </li>
+                            <li>
+                                <label>完成标记：</label>
+                                <select name="completemark" th:with="type=${@dict.getType('user_feedback_complete')}">
+                                    <option value="">所有</option>
+                                    <option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}"></option>
+                                </select>
+                            </li>
+                            <li>
+                                <a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search()"><i class="fa fa-search"></i>&nbsp;搜索</a>
+                                <a class="btn btn-warning btn-rounded btn-sm" onclick="$.form.reset()"><i class="fa fa-refresh"></i>&nbsp;重置</a>
+                            </li>
+                        </ul>
+                    </div>
+                </form>
+            </div>
+
+            <div class="btn-group-sm" id="toolbar" role="group">
+                <a class="btn btn-success" onclick="$.operate.add()" shiro:hasPermission="feedback:feedback:add">
+                    <i class="fa fa-plus"></i> 添加
+                </a>
+                <a class="btn btn-primary single disabled" onclick="$.operate.edit()" shiro:hasPermission="feedback:feedback:edit">
+                    <i class="fa fa-edit"></i> 修改
+                </a>
+                <a class="btn btn-danger multiple disabled" onclick="$.operate.removeAll()" shiro:hasPermission="feedback:feedback:remove">
+                    <i class="fa fa-remove"></i> 删除
+                </a>
+                <a class="btn btn-warning" onclick="$.table.exportExcel()" shiro:hasPermission="feedback:feedback:export">
+                    <i class="fa fa-download"></i> 导出
+                </a>
+                <a class="btn btn-info" onclick="printToHtml()">
+                    <i class="fa fa-bars"></i> 打印HTML
+                </a>
+                <a class="btn btn-success" onclick="feedbackAddchart()">
+                    <i class="fa fa-bar-chart"></i> 统计图表
+                </a>
+            </div>
+            <div class="col-sm-12 select-table">
+                <table id="bootstrap-table"></table>
+            </div>
+        </div>
+    </div>
+    <th:block th:include="include :: footer" />
+    <script th:inline="javascript">
+        var editFlag = [[${@permission.hasPermi('feedback:feedback:edit')}]];
+        var removeFlag = [[${@permission.hasPermi('feedback:feedback:remove')}]];
+        var completemarkDatas = [[${@dict.getType('user_feedback_complete')}]];
+        var prefix = ctx + "feedback/feedback";
+
+        function printToHtml(){
+            $.modal.openFull(table.options.modalName + "打印", "/feedback/feedback/feedbackprint");
+        }
+
+        function feedbackAddchart() {
+            table.set();
+            $.modal.open(table.options.modalName + "统计图表", "/feedback/feedback/feedbackchart");
+        }
+
+        $(function() {
+            var options = {
+                url: prefix + "/list",
+                createUrl: prefix + "/add",
+                updateUrl: prefix + "/edit/{id}",
+                removeUrl: prefix + "/remove",
+                exportUrl: prefix + "/export",
+                modalName: "用户反馈",
+                sortName:"completemark",
+                rowStyle: function(row, index) {                         // 动态修改行的颜色
+                    if(row.completemark %2 == 1 ){                                 // 如果值是1，表示已删除，设置行的颜色
+                        return  {css:{"background-color":'#f2f8fd'}};
+                    }
+                    return '';                                           // 注意：即使不改变颜色，也得返回 '' ，否则会报错。
+                },
+                columns: [{
+                    checkbox: true
+                },
+                {
+                    field: 'userFeedbackId',
+                    title: '用户反馈编号',
+                    visible: false
+                },
+                {
+                    field: 'userId',
+                    title: '用户ID',
+                    sortable:'true'
+                },
+                {
+                    field: 'userFeedbackContent',
+                    title: '用户反馈信息'
+                },
+                {
+                    field: 'adminFeedbackContent',
+                    title: '管理员回复内容'
+                },
+                {
+                    field: 'userFeedbackCreatetime',
+                    title: '用户反馈创建时间',
+                    sortable:'true'
+                },
+                {
+                    field: 'adminFeedbackCreatetime',
+                    title: '管理员回复时间',
+                    sortable:'true'
+                },
+                {
+                    field: 'completemark',
+                    title: '完成标记',
+                    sortable:'true',
+                    formatter: function(value, row, index) {
+                       return $.table.selectDictLabel(completemarkDatas, value);
+                    }
+                },
+                {
+                    title: '操作',
+                    align: 'center',
+                    formatter: function(value, row, index) {
+                        var actions = [];
+                        actions.push('<a class="btn btn-success btn-xs ' + editFlag + '" href="javascript:void(0)" onclick="$.operate.edit(\'' + row.userFeedbackId + '\')"><i class="fa fa-edit"></i>编辑</a> ');
+                        actions.push('<a class="btn btn-danger btn-xs ' + removeFlag + '" href="javascript:void(0)" onclick="$.operate.remove(\'' + row.userFeedbackId + '\')"><i class="fa fa-remove"></i>删除</a>');
+                        return actions.join('');
+                    }
+                }]
+            };
+            $.table.init(options);
+        });
+    </script>
+</body>
+</html>

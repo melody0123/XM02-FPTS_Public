@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+    <th:block th:include="include :: header('数据仓库列表')" />
+</head>
+<body class="gray-bg">
+     <div class="container-div">
+        <div class="row">
+            <div class="col-sm-12 search-collapse">
+                <form id="formId">
+                    <div class="select-list">
+                        <ul>
+                            <li>
+                                <label>代码：</label>
+                                <input type="text" name="productId"/>
+                            </li>
+                            <li>
+                                <label>名称：</label>
+                                <input type="text" name="name"/>
+                            </li>
+                            <li>
+                                <label>类型：</label>
+                                <select name="type" th:with="type=${@dict.getType('product_type')}">
+                                    <option value="">所有</option>
+                                    <option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}"></option>
+                                </select>
+                            </li>
+                            <li>
+                                <a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search()"><i class="fa fa-search"></i>&nbsp;搜索</a>
+                                <a class="btn btn-warning btn-rounded btn-sm" onclick="$.form.reset()"><i class="fa fa-refresh"></i>&nbsp;重置</a>
+                            </li>
+                        </ul>
+                    </div>
+                </form>
+            </div>
+
+            <div class="btn-group-sm" id="toolbar" role="group">
+                <a class="btn btn-success" onclick="$.operate.add()" shiro:hasPermission="finance_warehouse:finance_warehouse:add">
+                    <i class="fa fa-plus"></i> 添加
+                </a>
+                <a class="btn btn-primary single disabled" onclick="$.operate.edit()" shiro:hasPermission="finance_warehouse:finance_warehouse:edit">
+                    <i class="fa fa-edit"></i> 修改
+                </a>
+                <a class="btn btn-danger multiple disabled" onclick="$.operate.removeAll()" shiro:hasPermission="finance_warehouse:finance_warehouse:remove">
+                    <i class="fa fa-remove"></i> 删除
+                </a>
+                <a class="btn btn-warning" onclick="$.table.exportExcel()" shiro:hasPermission="finance_warehouse:finance_warehouse:export">
+                    <i class="fa fa-download"></i> 导出
+                </a>
+                <a class="btn btn-success" onclick="warehouseAddChart()" >
+                    <i class="fa fa-bar-chart"></i> 统计图表
+                </a>
+                <a class="btn btn-info" onclick="printToHtml()">
+                    <i class="fa fa-bars"></i> 打印HTML
+                </a>
+            </div>
+            <div class="col-sm-12 select-table table-striped">
+                <table id="bootstrap-table"></table>
+            </div>
+        </div>
+    </div>
+    <th:block th:include="include :: footer" />
+    <script th:inline="javascript">
+        var editFlag = [[${@permission.hasPermi('finance_warehouse:finance_warehouse:edit')}]];
+        var removeFlag = [[${@permission.hasPermi('finance_warehouse:finance_warehouse:remove')}]];
+        var typeDatas = [[${@dict.getType('product_type')}]];
+        var prefix = ctx + "finance_warehouse/finance_warehouse";
+
+        function warehouseAddChart() {
+            //table.set();
+            $.modal.open(table.options.modalName + "统计图表", "/finance_warehouse/finance_warehouse/chart");
+        }
+        function printToHtml(){
+            $.modal.openFull(table.options.modalName + "打印", "/finance_warehouse/finance_warehouse/print");
+        }
+
+        $(function() {
+            var options = {
+                url: prefix + "/list",
+                createUrl: prefix + "/add",
+                updateUrl: prefix + "/edit/{id}",
+                removeUrl: prefix + "/remove",
+                exportUrl: prefix + "/export",
+                modalName: "数据仓库",
+                columns: [{
+                    checkbox: true
+                },
+                {
+                    field: 'id',
+                    title: '编号',
+                    visible: false
+                },
+                {
+                    field: 'productId',
+                    title: '代码',
+                    sortable: true
+                },
+                {
+                    field: 'name',
+                    title: '名称',
+                    sortable: true
+                },
+                {
+                    field: 'type',
+                    title: '类型',
+                    sortable: true,
+                    formatter: function(value, row, index) {
+                       return $.table.selectDictLabel(typeDatas, value);
+                    }
+                },
+                {
+                    field: 'newPrice',
+                    title: '最新价',
+                    sortable: true
+                },
+                {
+                    field: 'openPrice',
+                    title: '开盘价'
+                },
+                {
+                    field: 'yesterdayPrice',
+                    title: '昨日结算'
+                },
+                {
+                    field: 'maxPrice',
+                    title: '最高价',
+                    sortable: true
+                },
+                {
+                    field: 'minPrice',
+                    title: '最低价',
+                    sortable: true
+                },
+                {
+                    field: 'increase',
+                    title: '涨幅',
+                    sortable: true
+                },
+                {
+                    field: 'increaseRate',
+                    title: '涨速',
+                    sortable: true
+                },
+                {
+                    field: 'turnoverRate',
+                    title: '换手率',
+                    sortable: true
+                },
+                {
+                    title: '操作',
+                    align: 'center',
+                    formatter: function(value, row, index) {
+                        var actions = [];
+                        actions.push('<a class="btn btn-success btn-xs ' + editFlag + '" href="javascript:void(0)" onclick="$.operate.edit(\'' + row.id + '\')"><i class="fa fa-edit"></i>编辑</a> ');
+                        actions.push('<a class="btn btn-danger btn-xs ' + removeFlag + '" href="javascript:void(0)" onclick="$.operate.remove(\'' + row.id + '\')"><i class="fa fa-remove"></i>删除</a>');
+                        return actions.join('');
+                    }
+                }]
+            };
+            $.table.init(options);
+        });
+    </script>
+</body>
+</html>

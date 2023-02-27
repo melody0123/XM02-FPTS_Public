@@ -1,0 +1,917 @@
+﻿<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>金融产品交易系统可视化大屏</title>
+    <script th:src="@{/js/echarts.js}"></script>
+    <script th:src="@{/js/jquery.js}"></script>
+    <script th:src="@{/js/js.js} "></script>
+    <script th:src="@{/js/jquery.cxselect.min.js}"></script>
+    <script th:src="@{/js/jquery.liMarquee.js}"></script>
+    <link href="/css/bootstrap.min.css?v=3.3.7" rel="stylesheet"/>
+    <link href="/css/font-awesome.min.css?v=4.7.0" rel="stylesheet"/>
+    <!-- bootstrap-table 表格插件样式 -->
+    <link href="/ajax/libs/bootstrap-table/bootstrap-table.min.css?v=1.18.3" rel="stylesheet"/>
+    <link href="/css/animate.min.css?v=20210831" rel="stylesheet"/>
+    <link href="/css/style.min.css?v=20210831" rel="stylesheet"/>
+    <link href="/ruoyi/css/ry-ui.css?v=4.7.5" rel="stylesheet"/>
+    <link href="../../static/css/comon0.css" th:href="@{/css/comon0.css}" rel="stylesheet"/>
+</head>
+<body>
+<div style="background:#000d4a url(images/bg.jpg) center top;">
+    <div class="loading">
+        <div class="loadbox"><img src="images/loading.gif"> 页面加载中...</div>
+    </div>
+    <div class="back"></div>
+
+    <div class="head">
+        <div class="weather"><span id="showTime"></span></div>
+        <h1>金融产品交易系统可视化大屏</h1>
+    </div>
+
+    <script>
+        var t = null;
+        t = setTimeout(time, 1000);/*開始运行*/
+        function time() {
+            clearTimeout(t);/*清除定时器*/
+            dt = new Date();
+            var y = dt.getFullYear();
+            var mt = dt.getMonth() + 1;
+            var day = dt.getDate();
+            var h = dt.getHours();
+            var m = dt.getMinutes();
+            var s = dt.getSeconds();
+            document.getElementById("showTime").innerHTML = y + "年" + mt + "月" + day + "日" + h + "时" + m + "分" + s + "秒";
+            t = setTimeout(time, 1000);
+        }
+    </script>
+
+    <div class="mainbox">
+        <ul class="clearfix">
+
+            <!--左侧三个表-->
+            <li>
+                <div class="boxall" style="height:400px;">
+                    <div class="alltitle">城市天气数据比例统计</div>
+                    <div class="navboxall" id="echart5"></div>
+                </div>
+
+                <div class="boxall" style="height:260px;">
+                    <div class="alltitle">我的待办事项</div>
+                    <div class="navboxall">
+                        <div class="wraptit">
+                            <span>任务</span><span>细节</span>
+                        </div>
+                        <div class="wrap">
+                            <ul th:each="todoItem:${todoList}">
+                                <li><p><span th:text="${todoItem.task}"></span><span
+                                        th:text="${todoItem.detail}">199</span></p></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="boxall" style="height:260px;">
+                    <div class="alltitle">用户反馈数量统计</div>
+                    <div class="navboxall" id="echart6"></div>
+                </div>
+                <div class="boxall" style="height:320px">
+                    <div class="alltitle">账户资产</div>
+                    <div class="navboxall" id="echart7"></div>
+                </div>
+            </li>
+
+            <!--中间三个表-->
+            <li>
+                <div class="boxall" style="height:230px">
+                    <div class="clearfix navboxall" style="height: 100%">
+                        <div class="pulll_left num">
+                            <div class="numbt">总体情况<span>(单位：元)</span></div>
+                            <div class="numtxt">1938272</div>
+                        </div>
+                        <div class="pulll_right zhibiao">
+                            <div class="zb1"><span>资金流通</span>
+                                <div id="zb1"></div>
+                            </div>
+                            <div class="zb2"><span>金融产品</span>
+                                <div id="zb2"></div>
+                            </div>
+                            <div class="zb3"><span>财经新闻</span>
+                                <div id="zb3"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="boxall" style="height:350px">
+                    <div class="alltitle">整体行情：上证指数</div>
+                    <div class="navboxall" id="echart4"></div>
+                </div>
+
+                <div class="boxall" style="height:340px">
+                    <div class="alltitle">涨幅TOP10产品统计</div>
+                    <div class="navboxall" id="echart3"></div>
+                </div>
+                <div class="boxall" style="height:320px">
+                    <div class="alltitle">持仓记录统计</div>
+                    <div class="navboxall" id="echart8"></div>
+                </div>
+            </li>
+
+            <!--右侧三个表-->
+            <li>
+                <div class="boxall" style="height:300px">
+                    <div class="alltitle">通知公告</div>
+                    <div class="navboxall">
+                        <table class="table1" width="100%" border="0" cellspacing="0" cellpadding="0">
+                            <tbody>
+                            <tr>
+                                <th scope="col" onclick="notice()">公告标题</th>
+                                <th scope="col">发布时间</th>
+                            </tr>
+                            <tr th:each="noticeee:${notice}" th:if="${noticeeeStat.index} lt 3">
+                                <td th:text="${noticeee.noticeTitle}" onclick="notice()"></td>
+                                <td th:text="${noticeee.createTime}"></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="boxall" style="height: 300px">
+                    <div class="alltitle">银行账户余额排行榜</div>
+                    <div class="navboxall">
+                        <table class="table1" width="100%" border="0" cellspacing="0" cellpadding="0">
+                            <tbody>
+                                <tr>
+                                    <th scope="col">排名</th>
+                                    <th scope="col">用户ID</th>
+                                    <th scope="col">账户ID</th>
+                                    <th scope="col">余额</th>
+                                </tr>
+                                <tr th:each="accountItem:${accountInfoList}" th:if="${accountItemStat.index} lt 5">
+                                    <td><span th:text="${accountItemStat.index} + 1"></span></td>
+                                    <td th:text="${accountItem.userId}"></td>
+                                    <td th:text="${accountItem.accountId}"></td>
+                                    <td th:text="${accountItem.accountBalance}"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+<!--                <div class="boxall" style="height:320px;">-->
+<!--                    <div class="alltitle">银行账户余额排行榜</div>-->
+<!--                    <div class="navboxall">-->
+<!--                        <div class="wraptit">-->
+<!--                            <span>排名</span><span>用户ID</span><span>账户ID</span><span>余额</span>-->
+<!--                        </div>-->
+<!--                        <div class="wrap">-->
+<!--                            <ul th:each="accountItem:${accountInfoList}">-->
+<!--                                <li>-->
+<!--                                    <p>-->
+<!--                                        <span th:text="${accountItemStat.index}"></span>-->
+<!--                                        <span th:text="${accountItem.userId}"></span>-->
+<!--                                        <span th:text="${accountItem.accountId}"></span>-->
+<!--                                        <span th:text="${accountItem.accountBalance}"></span>-->
+<!--                                    </p>-->
+<!--                                </li>-->
+<!--                            </ul>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                </div>-->
+
+                <div class="boxall" style="height:320px;">
+                    <div class="alltitle">财经论坛</div>
+                    <div class="navboxall">
+                        <div class="wraptit">
+                            <span>产品名称</span><span>评论</span>
+                        </div>
+                        <div class="wrap">
+                            <ul th:each="forumItem:${financeForum}">
+                                <li><p><span th:text="${forumItem.name}"></span>
+                                    <span th:text="${forumItem.content}">199</span></p></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="boxall" style="height:320px">
+                    <div class="alltitle">实名认证完成状况统计</div>
+                    <div class="navboxall" id="echart2"></div>
+                </div>
+            </li>
+        </ul>
+    </div>
+
+</div>
+
+<script th:inline="javascript">
+    $(function () {
+        $('.wrap,.adduser').liMarquee({
+            direction: 'up',/*身上滚动*/
+            runshort: false,/*内容不足时不滚动*/
+            scrollamount: 20/*速度*/
+        });
+    });
+    echarts_2();
+    echarts_3();
+    echarts_4();
+    echarts_5();
+    echarts_6();
+    echarts_7();
+    echarts_8();
+
+    function notice() {
+        window.location.href = "/system/notice";
+    }
+
+    function echarts_2() {
+        // 基于准备好的dom，初始化echarts实例
+        var myChart = echarts.init(document.getElementById('echart2'));
+
+        let statusList = [[${statusList}]];
+
+        let countList = [[${countList}]];
+
+        // 指定图表的配置项和数据
+        var option = {
+            tooltip: {
+                trigger: 'item',
+                formatter: "{b} : {c} ({d}%)"
+            },
+            legend: {
+                data: ['用户数量'],
+                top: '15%',
+                data: ['已完成实名认证', '未完成实名认证'],
+                icon: 'circle',
+                textStyle: {
+                    color: 'white',
+                }
+            },
+            calculable: true,
+            series: [
+                {
+                    type: 'pie',    // 设置图表类型为饼图
+                    radius: ['30%', '50%'],  // 饼图的半径，外半径为可视区尺寸（容器高宽中较小一项）的 55% 长度。
+                    center: ['50%', '50%'],  // 支持设置成百分比，设置成百分比时第一项是相对于容器宽度，第二项是相对于容器高度
+                    label: {
+                        normal: {
+                            formatter: '{b}:{c}' + '\n\r' + '({d}%)',
+                            show: true,
+                            position: 'outside'
+                        }
+                    },
+                    labelLine: {
+                        normal: {
+                            show: true
+                        }
+                    },
+                    data: [ // 数据数组，name 为数据项名称，value 为数据项值
+                        {value: countList[0], name: '已完成实名认证'},
+                        {value: countList[1], name: '未完成实名认证'},
+                    ]
+                }
+            ]
+        };
+        // 使用刚指定的配置项和数据显示图表。
+        myChart.setOption(option);
+        window.addEventListener("resize", function () {
+            myChart.resize();
+        });
+    }
+
+    function echarts_3() {
+        // 基于准备好的dom，初始化echarts实例
+        var myChart = echarts.init(document.getElementById('echart3'));
+
+        var tempCntList = '[[${incList}]]'.replace('[', '').replace(']', '').split(",");
+        var tempPIDList = '[[${pIdList}]]';
+
+        //转化为字符串数组和整数数组
+        let pIdList = tempPIDList.replace('[', '').replace(']', '').split(",");
+        let cntList = [];
+        tempCntList.forEach(function (data, index, arr) {
+            cntList.push(+data);
+        });
+
+        console.log(pIdList);
+        console.log(cntList);
+
+        // 指定图表的配置项和数据
+        var option = {
+
+            tooltip: {},
+            legend: {
+                data: ['涨幅'],
+                textStyle: {
+                    color: 'white',
+                }
+            },
+            xAxis: {
+                name: '产品名称',
+                data: pIdList,
+                axisLabel: { // 如果显示字符过长 就间隔1 设为0
+                    textStyle: {color: 'white', fontSize: '14',},
+                    interval: 0
+                },
+                textStyle: {
+                    color: 'white',
+                }
+            },
+            yAxis: {},
+            series: [
+                {
+                    name: '涨幅',
+                    type: 'bar',
+                    data: cntList,
+                    textStyle: {
+                        color: 'white',
+                    }
+                }
+            ]
+        };
+
+        // 使用刚指定的配置项和数据显示图表。
+        myChart.setOption(option);
+        window.addEventListener("resize", function () {
+            myChart.resize();
+        });
+    }
+
+    function echarts_4() {
+        // 基于准备好的dom，初始化echarts实例
+        var myChart = echarts.init(document.getElementById('echart4'));
+
+        var app = {};///
+        var IndexName = "";///图中名称
+        var upColor = '#ec0000';
+        var upBorderColor = '#8A0000';
+        var downColor = '#00da3c';
+        var downBorderColor = '#008F28';
+
+        // 数据意义：开盘(open)，收盘(close)，最低(lowest)，最高(highest)
+        var data0 = splitData(GetData());
+
+        //var option;
+
+        function splitData(rawData) {
+            var categoryData = [];
+            var values = []
+            for (var i = 0; i < rawData.length; i++) {
+                categoryData.push(rawData[i].splice(0, 1)[0]);
+                values.push(rawData[i])
+            }
+            return {
+                categoryData: categoryData,
+                values: values
+            };
+        }
+
+        function calculateMA(dayCount) {
+            var result = [];
+            for (var i = 0, len = data0.values.length; i < len; i++) {
+                if (i < dayCount) {
+                    result.push('-');
+                    continue;
+                }
+                var sum = 0;
+                for (var j = 0; j < dayCount; j++) {
+                    sum += parseFloat(data0.values[i - j][1]);
+                }
+                result.push(sum / dayCount);
+            }
+            return result;
+        }
+
+        function GetData() {
+
+            let url = "";
+            console.log(url);
+            var arr = [];
+            $.ajax({
+                url: url,
+                type: "get",
+                async: false,
+                dataType: "json",
+                success: function (data) {
+                    console.log(url);
+                    arr = [];
+                    let result = [];
+                    result = data.map(item => [
+                        item['日期'],
+                        item['开盘'],
+                        item['收盘'],
+                        item['最低'],
+                        item['最高'],
+                    ]) //映射为官方demo的数据格式
+                    arr = result;
+                    console.log(arr);
+                }
+            })
+            return arr;
+        }
+
+        option = {
+            title: {
+                text: IndexName,
+                left: 0
+            },
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'cross'
+                }
+            },
+            legend: {
+                data: ['日K', 'MA5', 'MA10', 'MA20', 'MA30'],
+                textStyle: {color: "#fff"}
+            },
+            grid: {
+                left: '10%',
+                right: '10%',
+                bottom: '15%'
+            },
+            xAxis: {
+                type: 'category',
+                axisLabel: {textStyle: {color: "#fff",}},
+                axisLine: {lineStyle: {color: 'rgba(255,255,255,.6)'}, onZero: false},
+                data: data0.categoryData,
+                scale: true,
+                boundaryGap: false,
+                splitLine: {show: false},
+                splitNumber: 20,
+                min: 'dataMin',
+                max: 'dataMax'
+            },
+            yAxis: {
+                scale: true,
+                splitArea: {
+                    show: true
+                },
+                axisLabel: {textStyle: {color: '#fff'}},
+                axisLine: {lineStyle: {color: 'rgba(255,255,255,.6)'}},
+            },
+            dataZoom: [
+                {
+                    type: 'inside',
+                    start: 50,
+                    end: 100
+                },
+                {
+                    show: true,
+                    type: 'slider',
+                    top: '90%',
+                    start: 50,
+                    end: 100,
+                    textStyle: {
+                        color: "#fff"
+                    },
+                    borderColor: "rgba(255,255,255,.6)"
+                },
+
+            ],
+            series: [
+                {
+                    name: '日K',
+                    type: 'candlestick',
+                    data: data0.values,
+                    itemStyle: {
+                        color: upColor,
+                        color0: downColor,
+                        borderColor: upBorderColor,
+                        borderColor0: downBorderColor
+                    },
+                    markPoint: {
+                        label: {
+                            normal: {
+                                formatter: function (param) {
+                                    return param != null ? Math.round(param.value) : '';
+                                }
+                            }
+                        },
+                        data: [
+                            {
+                                name: 'XX标点',
+                                coord: ['2013/5/31', 2300],
+                                value: 2300,
+                                itemStyle: {
+                                    color: '#fff'
+                                }
+                            },
+                            {
+                                name: 'highest value',
+                                type: 'max',
+                                valueDim: 'highest'
+                            },
+                            {
+                                name: 'lowest value',
+                                type: 'min',
+                                valueDim: 'lowest'
+                            },
+                            {
+                                name: 'average value on close',
+                                type: 'average',
+                                valueDim: 'close'
+                            }
+                        ],
+                        tooltip: {
+                            formatter: function (param) {
+                                return param.name + '<br>' + (param.data.coord || '');
+                            }
+                        }
+                    },
+                    markLine: {
+                        symbol: ['none', 'none'],
+                        data: [
+                            [
+                                {
+                                    name: 'from lowest to highest',
+                                    type: 'min',
+                                    valueDim: 'lowest',
+                                    symbol: 'circle',
+                                    symbolSize: 10,
+                                    label: {
+                                        show: false
+                                    },
+                                    emphasis: {
+                                        label: {
+                                            show: false
+                                        }
+                                    }
+                                },
+                                {
+                                    type: 'max',
+                                    valueDim: 'highest',
+                                    symbol: 'circle',
+                                    symbolSize: 10,
+                                    label: {
+                                        show: false
+                                    },
+                                    emphasis: {
+                                        label: {
+                                            show: false
+                                        }
+                                    }
+                                }
+                            ],
+                            {
+                                name: 'min line on close',
+                                type: 'min',
+                                valueDim: 'close'
+                            },
+                            {
+                                name: 'max line on close',
+                                type: 'max',
+                                valueDim: 'close'
+                            }
+                        ]
+                    }
+                },
+                {
+                    name: 'MA5',///周均线
+                    type: 'line',
+                    data: calculateMA(5),
+                    smooth: true,
+                    lineStyle: {
+                        opacity: 0.5
+                    }
+                },
+                {
+                    name: 'MA10',///两周均线
+                    type: 'line',
+                    data: calculateMA(10),
+                    smooth: true,
+                    lineStyle: {
+                        opacity: 0.5
+                    }
+                },
+                {
+                    name: 'MA20',///四周均线
+                    type: 'line',
+                    data: calculateMA(20),
+                    smooth: true,
+                    lineStyle: {
+                        opacity: 0.5
+                    }
+                },
+                {
+                    name: 'MA30',///月均线
+                    type: 'line',
+                    data: calculateMA(30),
+                    smooth: true,
+                    lineStyle: {
+                        opacity: 0.5
+                    }
+                },
+
+            ]
+        };
+
+        // 使用刚指定的配置项和数据显示图表。
+        myChart.setOption(option);
+        window.addEventListener("resize", function () {
+            myChart.resize();
+        });
+    }
+
+    function echarts_5() {
+        // 基于准备好的dom，初始化echarts实例
+        var myChart = echarts.init(document.getElementById('echart5'));
+        var cityList = [[${cityList}]];
+        var totalCityNum = [[${totalCityNum}]];
+        var cityCntList = [[${cityCntList}]];
+        var cityPercentList = [];
+        for (let i in cityCntList) {
+            //console.log(cityCntList[i] + " " + totalCityNum);
+            cityPercentList.push(cityCntList[i] / totalCityNum * 100);
+        }
+        var fullData = new Array(cityList.length).fill(100);
+        //console.log(cityCntList);
+        //console.log(cityPercentList);
+        //console.log(cityList);
+// 颜色
+        var lightBlue = {
+            type: 'linear',
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [{
+                offset: 0,
+                color: 'rgba(41, 121, 255, 1)'
+            }, {
+                offset: 1,
+                color: 'rgba(0, 192, 255, 1)'
+            }],
+            globalCoord: false
+        };
+
+        var option = {
+            tooltip: {
+                show: false
+            },
+            grid: {
+                top: '0%',
+                left: '65',
+                right: '14%',
+                bottom: '0%',
+            },
+            xAxis: {
+                min: 0,
+                max: 100,
+                splitLine: {
+                    show: false
+                },
+                axisTick: {
+                    show: false
+                },
+                axisLine: {
+                    show: false
+                },
+                axisLabel: {
+                    show: false
+                }
+            },
+            yAxis: {
+                data: cityList,
+                //offset: 15,
+                axisTick: {
+                    show: false
+                },
+                axisLine: {
+                    show: false
+                },
+                axisLabel: {
+                    color: 'rgba(255,255,255,.6)',
+                    fontSize: 14
+                }
+            },
+            series: [{
+                type: 'bar',
+                label: {
+                    show: true,
+                    zlevel: 10000,
+                    position: 'right',
+                    padding: 10,
+                    color: '#49bcf7',
+                    fontSize: 14,
+                    formatter: '{c}%'
+
+                },
+                itemStyle: {
+                    color: '#49bcf7'
+                },
+                barWidth: '15',
+                data: cityPercentList,
+                z: 10
+            }, {
+                type: 'bar',
+                barGap: '-100%',
+                itemStyle: {
+                    color: '#fff',
+                    opacity: 0.1
+                },
+                barWidth: '15',
+                data: fullData,
+                z: 5
+            }],
+        };
+        // 使用刚指定的配置项和数据显示图表。
+        myChart.setOption(option);
+        window.addEventListener("resize", function () {
+            myChart.resize();
+        });
+    }
+
+    function echarts_6() {
+        var myChart = echarts.init(document.getElementById('echart6'));
+        var cntList = [[${cntList}]];
+        console.log(cntList);
+
+        var dateList = [[${dateList}]];
+        console.log(dateList);
+
+        // 指定图表的配置项和数据
+        var option = {
+            // title: {
+            //     text: '用户反馈创建时间统计'
+            // },
+            tooltip: {},
+            legend: {
+                data: ['用户反馈个数']
+            },
+            xAxis: {
+                data: dateList
+            },
+            yAxis: {},
+            series: [
+                {
+                    name: '截止反馈个数',
+                    type: 'line',
+                    data: cntList
+                }
+            ]
+        };
+
+        // 使用刚指定的配置项和数据显示图表。
+        myChart.setOption(option);
+        window.addEventListener("resize", function () {
+            myChart.resize();
+        });
+    }
+
+    function echarts_7() {
+        // 基于准备好的dom，初始化echarts实例
+        var myChart = echarts.init(document.getElementById('echart7'));
+        var userId = [[${@permission.getPrincipalProperty('userId')}]];
+        var assets;
+        $.ajax({
+            type: 'post',
+            url: '/assets/account_assets/eCharts',
+            data: {userId: userId},
+            async: false,
+            success: function(res) {
+                console.log(res);
+                assets = res;
+            }
+        });
+        option = {
+            tooltip: {
+                trigger: 'item',
+                formatter: "{b} : {c} ({d}%)"
+            },
+            legend: {
+                right: 0,
+                top: 30,
+                height: 160,
+                itemWidth: 10,
+                itemHeight: 10,
+                itemGap: 10,
+                textStyle: {
+                    color: 'rgba(255,255,255,.6)',
+                    fontSize: 12
+                },
+                orient: 'vertical',
+                data: ['A股', 'B股', '债券', '基金']
+            },
+            calculable: true,
+            series: [
+                {
+                    name: ' ',
+                    color: ['#62c98d', '#2f89cf', '#4cb9cf', '#53b666', '#62c98d', '#205acf', '#c9c862', '#c98b62', '#c962b9', '#7562c9', '#c96262', '#c25775', '#00b7be'],
+                    type: 'pie',
+                    radius: [30, 70],
+                    center: ['35%', '50%'],
+                    roseType: 'radius',
+                    label: {
+                        normal: {
+                            show: true
+                        },
+                        emphasis: {
+                            show: true
+                        }
+                    },
+
+                    lableLine: {
+                        normal: {
+                            show: true
+                        },
+                        emphasis: {
+                            show: true
+                        }
+                    },
+
+                    data: [
+                        {value: assets[0], name: 'A股'},
+                        {value: assets[1], name: 'B股'},
+                        {value: assets[2], name: '债券'},
+                        {value: assets[3], name: '基金'}
+                    ]
+                },
+            ]
+        };
+
+        // 使用刚指定的配置项和数据显示图表。
+        myChart.setOption(option);
+        window.addEventListener("resize", function () {
+            myChart.resize();
+        });
+    }
+
+    function echarts_8() {
+        var myChart = echarts.init(document.getElementById('echart8'));
+        var amountList=[0,0,0,0,0,0,0,0,0,0,0,0];
+        var monthList;
+        var userId = [[${@permission.getPrincipalProperty('userId')}]];
+        $.ajax({
+            type: 'post',
+            url: '/position/accountPosition/eCharts',
+            data: {userId: userId},
+            async: false,
+            success: function(res) {
+                console.log(res);
+                amountList = res;
+            }
+        });
+        // 基于准备好的dom，初始化echarts实例
+        let mouthList = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+
+
+        // 指定图表的配置项和数据
+        var option = {
+
+            tooltip: {},
+            legend: {
+                data: ['持仓数量'],
+                textStyle: {
+                    color: 'white',
+                }
+            },
+            xAxis: {
+                name: '月份',
+                data: mouthList,
+                axisLabel: { // 如果显示字符过长 就间隔1 设为0
+                    textStyle: {color: 'white', fontSize: '13',},
+                    interval: 0
+                },
+                textStyle: {
+                    color: 'white',
+                }
+            },
+            yAxis: {},
+            series: [
+                {
+                    name: '数量',
+                    type: 'bar',
+                    data: amountList,
+                    textStyle: {
+                        color: 'white',
+                    },
+                    markPoint : {
+                        data : [
+                            {type : 'max', name: '最大值'},
+                            {type : 'min', name: '最小值'}
+                        ]
+                    },
+                    markLine : {
+                        data : [
+                            {type : 'average', name: '平均值'}
+                        ]
+                    }
+                }
+            ]
+        };
+
+        // 使用刚指定的配置项和数据显示图表。
+        myChart.setOption(option);
+        window.addEventListener("resize", function () {
+            myChart.resize();
+        });
+    }
+
+
+
+</script>
+</body>
+</html>

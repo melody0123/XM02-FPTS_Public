@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:include="include :: header('查看通知公告')"/>
+    <th:block th:include="include :: summernote-css"/>
+</head>
+<body class="white-bg">
+<div class="wrapper wrapper-content animated fadeInRight ibox-content">
+    <form class="form-horizontal m" id="form-notice-edit" th:object="${notice}">
+        <input id="noticeId" name="noticeId" th:field="*{noticeId}" type="hidden">
+        <div class="form-group">
+            <label class="form-label">公告标题：</label>
+            <input id="noticeTitle" name="noticeTitle" th:field="*{noticeTitle}" class="form-control" type="text">
+        </div>
+        <div class="form-group">
+            <label class="form-label">公告内容：</label>
+            <textarea id="noticeContent" name="noticeContent" th:field="*{noticeContent}" class="form-control"
+                      type="text"></textarea>
+        </div>
+    </form>
+</div>
+<th:block th:include="include :: footer"/>
+<th:block th:include="include :: summernote-js"/>
+</script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" >
+<head>
+    <th:block th:include="include :: header('金融信息图表')" />
+    <th:block th:include="include :: datetimepicker-css" />
+    <!-- bootstrap-table 表格插件样式 -->
+
+</head>
+<body class="white-bg">
+<!-- 为 ECharts 准备一个定义了宽高的 DOM -->
+<div id="main" style="width: 800px;height:500px;"></div>
+<script th:src="@{/js/echarts.js}"></script>
+
+<<script type="text/javascript">
+    // 基于准备好的dom，初始化echarts实例
+    //var chartDom = document.getElementById('quotations-count-container');
+    var myChart = echarts.init(document.getElementById('main'));
+
+    let cntList = [[${cCntList}]];
+    console.log(cntList);
+
+    let typeList = [[${cTypeList}]];
+    console.log(typeList);
+
+    // 指定图表的配置项和数据
+    var option = {
+        title: {
+            text: '产品收藏分类统计图'    //标题
+        },
+        tooltip: {},                    //提示信息框，详细信息在配置项手册
+        legend: {
+            data: ['收藏数量']           //图例组件，可以把不同的图例分开
+        },
+        toolbox: {                      //工具箱组件
+          feature: {
+              saveAsImage: {}           //另存为图片
+          }
+        },
+        xAxis: {
+            name: '产品种类',
+            data: ['A股','B股','债券','基金']
+        },
+        yAxis: {},
+        series: [                       //系列列表
+            {
+                name: '收藏数量',
+                type: 'bar',
+                data: cntList
+            }
+        ]
+    };
+
+    // 使用刚指定的配置项和数据显示图表。
+    myChart.setOption(option);
+</script>
+</body>
+</html>

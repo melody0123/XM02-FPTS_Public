@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fpts.assets.mapper.AccountAssetsMapper">
+    
+    <resultMap type="AccountAssets" id="AccountAssetsResult">
+        <result property="no"    column="no"    />
+        <result property="userId"    column="user_id"    />
+        <result property="accountId"    column="account_id"    />
+        <result property="accountBalance"    column="account_balance"    />
+        <result property="totalAssets"    column="total_assets"    />
+        <result property="astockAssets"    column="astock_assets"    />
+        <result property="bstockAssets"    column="bstock_assets"    />
+        <result property="bonfAssets"    column="bonf_assets"    />
+        <result property="fundAssets"    column="fund_assets"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+    </resultMap>
+
+    <sql id="selectAccountAssetsVo">
+        select no, user_id, account_id, account_balance, total_assets, astock_assets, bstock_assets, bonf_assets, fund_assets, create_by, create_time from account_assets
+    </sql>
+
+    <select id="selectAccountAssetsList" parameterType="AccountAssets" resultMap="AccountAssetsResult">
+        <include refid="selectAccountAssetsVo"/>
+        <where> 1=1
+            <if test="userId != null  and userId != ''"> and user_id = #{userId}</if>
+            <if test="accountId != null  and accountId != ''"> and account_id = #{accountId}</if>
+            <if test="accountBalance != null "> and account_balance = #{accountBalance}</if>
+            <if test="totalAssets != null "> and total_assets = #{totalAssets}</if>
+            <if test="astockAssets != null "> and astock_assets = #{astockAssets}</if>
+            <if test="bstockAssets != null "> and bstock_assets = #{bstockAssets}</if>
+            <if test="bonfAssets != null "> and bonf_assets = #{bonfAssets}</if>
+            <if test="fundAssets != null "> and fund_assets = #{fundAssets}</if>
+        </where>
+        ${params.dataScope}
+    </select>
+    
+    <select id="selectAccountAssetsByNo" parameterType="Long" resultMap="AccountAssetsResult">
+        <include refid="selectAccountAssetsVo"/>
+        where no = #{no}
+    </select>
+        
+    <insert id="insertAccountAssets" parameterType="AccountAssets" useGeneratedKeys="true" keyProperty="no">
+        insert into account_assets
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="userId != null and userId != ''">user_id,</if>
+            <if test="accountId != null and accountId != ''">account_id,</if>
+            <if test="accountBalance != null">account_balance,</if>
+            <if test="totalAssets != null">total_assets,</if>
+            <if test="astockAssets != null">astock_assets,</if>
+            <if test="bstockAssets != null">bstock_assets,</if>
+            <if test="bonfAssets != null">bonf_assets,</if>
+            <if test="fundAssets != null">fund_assets,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="userId != null and userId != ''">#{userId},</if>
+            <if test="accountId != null and accountId != ''">#{accountId},</if>
+            <if test="accountBalance != null">#{accountBalance},</if>
+            <if test="totalAssets != null">#{totalAssets},</if>
+            <if test="astockAssets != null">#{astockAssets},</if>
+            <if test="bstockAssets != null">#{bstockAssets},</if>
+            <if test="bonfAssets != null">#{bonfAssets},</if>
+            <if test="fundAssets != null">#{fundAssets},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateAccountAssets" parameterType="AccountAssets">
+        update account_assets
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="userId != null and userId != ''">user_id = #{userId},</if>
+            <if test="accountId != null and accountId != ''">account_id = #{accountId},</if>
+            <if test="accountBalance != null">account_balance = #{accountBalance},</if>
+            <if test="totalAssets != null">total_assets = #{totalAssets},</if>
+            <if test="astockAssets != null">astock_assets = #{astockAssets},</if>
+            <if test="bstockAssets != null">bstock_assets = #{bstockAssets},</if>
+            <if test="bonfAssets != null">bonf_assets = #{bonfAssets},</if>
+            <if test="fundAssets != null">fund_assets = #{fundAssets},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+        </trim>
+        where no = #{no}
+    </update>
+
+    <delete id="deleteAccountAssetsByNo" parameterType="Long">
+        delete from account_assets where no = #{no}
+    </delete>
+
+    <delete id="deleteAccountAssetsByNos" parameterType="String">
+        delete from account_assets where no in 
+        <foreach item="no" collection="array" open="(" separator="," close=")">
+            #{no}
+        </foreach>
+    </delete>
+
+    <select id="selectAccountId"  resultMap="AccountAssetsResult">
+        <include refid="selectAccountAssetsVo"/>
+    </select>
+
+</mapper>

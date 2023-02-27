@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+    <th:block th:include="include :: header('天气管理列表')" />
+</head>
+<body class="gray-bg" style="background-color: #e0f8f8">
+<div class="container-div">
+     <div class="container-div">
+        <div class="row">
+            <div class="col-sm-12 search-collapse" title="搜索框">
+                <form id="formId">
+                    <div class="select-list">
+                        <ul>
+                            <li>
+                                <label>编号：</label>
+                                <input type="text" name="id"/>
+                            </li>
+                            <li>
+                                <label>城市：</label>
+                                <input type="text" name="city"/>
+                            </li>
+
+                            <li>
+                                <a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search()"><i class="fa fa-search"></i>&nbsp;搜索</a>
+                                <a class="btn btn-warning btn-rounded btn-sm" onclick="$.form.reset()"><i class="fa fa-refresh"></i>&nbsp;重置</a>
+                            </li>
+                        </ul>
+                    </div>
+                </form>
+            </div>
+
+            <div class="btn-group-sm" id="toolbar" role="group">
+                <a class="btn btn-success" onclick="$.operate.add()" shiro:hasPermission="weathers:cityWeathers:add">
+                    <i class="fa fa-plus"></i> 添加
+                </a>
+                <a class="btn btn-primary single disabled" onclick="$.operate.edit()" shiro:hasPermission="weathers:cityWeathers:edit">
+                    <i class="fa fa-edit"></i> 修改
+                </a>
+                <a class="btn btn-danger multiple disabled" onclick="$.operate.removeAll()" shiro:hasPermission="weathers:cityWeathers:remove">
+                    <i class="fa fa-remove"></i> 删除
+                </a>
+                <a class="btn btn-warning" onclick="$.table.exportExcel()" shiro:hasPermission="weathers:cityWeathers:export">
+                    <i class="fa fa-download"></i> 导出
+                </a>
+                <a class="btn btn-info" onclick="printToHtml()">
+                    <i class="fa fa-bars"></i> 打印HTML
+                </a>
+                <!--             图表-->
+                <a class="btn btn-success" onclick="weatherAddChart()">
+                    <i class="fa fa-bar-chart"></i> 统计图表
+                </a>
+            </div>
+            <div class="col-sm-12 select-table">
+                <table id="bootstrap-table" class="table table-bordered"></table>
+            </div>
+
+            <div class="col-sm-12 search-collapse">
+                <form id="form-cityWeathers-search">
+                    <div class="select-list">
+                        <ul>
+                            <li>
+                                <label>查询城市：</label>
+                                <input type="text" id="searchCity"/>
+                            </li>
+                            <li>
+                                <a class="btn btn-primary btn-rounded btn-sm" onclick="searchWeather()"><i class="fa fa-search"></i>&nbsp;搜索该城市天气</a>
+                                <a class="btn btn-success btn-rounded btn-sm" onclick="saveWeather()"><i class="fa fa-plus-square-o"></i>&nbsp;保存至数据库</a>
+                            </li>
+
+                        </ul>
+                        <br>
+                        <br>
+                        <br>
+
+<!--                                <label>查询结果：</label>-->
+                        <div class="col-sm-10">
+                            <textarea type="text" id = "searchResultWeatherDay" name="searchResultWeatherDay" class="form-control" placeholder="查询结果"></textarea>
+                        </div>
+
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <th:block th:include="include :: footer" />
+    <script th:inline="javascript">
+        var editFlag = [[${@permission.hasPermi('weathers:cityWeathers:edit')}]];
+        var removeFlag = [[${@permission.hasPermi('weathers:cityWeathers:remove')}]];
+        var prefix = ctx + "weathers/cityWeathers";
+
+        function printToHtml(){
+            $.modal.openFull(table.options.modalName + "打印", "/weathers/cityWeathers/print");
+        }
+        // weather图表信息
+        function weatherAddChart() {
+            table.set();
+            $.modal.open(table.options.modalName + "统计图表", "/weathers/cityWeathers/chart");
+        }
+
+        function saveWeather(){
+            var config = {
+                url: "/weathers/cityWeathers/save",
+                type: "post",
+                dataType: "json",
+                beforeSend: function () {
+                    $.modal.loading("正在处理中，请稍候...");
+                    $.modal.disable();
+                },
+                success: function(result) {
+                    if (typeof callback == "function") {
+                        callback(result);
+                    }
+                    $.operate.successCallback(result);
+                }
+            };
+            $.ajax(config);
+            document.getElementById("searchResultWeatherDay").value= null;
+
+        }
+
+        function searchWeather() {
+            var city = document.getElementById("searchCity").value;
+            console.log("city:" + city);
+            var url = "/weathers/cityWeathers/search/" +city;
+            $.post(url,function(data){
+                var str = "城市：" + data.city + ", 日间天气：" + data.weatherDay + ", 夜间天气：" + data.weatherNight
+                    + ", 最高气温：" + data.temperatureHigh +", 最低气温：" + data.temperatureLow + ", 风向：" +
+                    data.windDirection + ", 风力：" + data.windScale;
+                console.log(data);
+                console.log(str);
+                document.getElementById("searchResultWeatherDay").value=str;
+
+            });
+
+        }
+        $(function() {
+            var options = {
+                url: prefix + "/list",
+                createUrl: prefix + "/add",
+                updateUrl: prefix + "/edit/{id}",
+                removeUrl: prefix + "/remove",
+                exportUrl: prefix + "/export",
+                modalName: "天气管理",
+                rowStyle: function(row, index) {                         // 动态修改行的颜色
+                    if(row.id %2 == 1 ){                                 // 如果值是1，表示已删除，设置行的颜色
+                        return  {css:{"background-color":'#f2f8fd'}};
+                    }
+                    return '';                                           // 注意：即使不改变颜色，也得返回 '' ，否则会报错。
+                },
+                sortName:"createTime",
+                sortOrder: 'desc',
+                columns: [{
+                    checkbox: true
+                },
+                {
+                    field: 'id',
+                    title: '编号',
+                    visible: false,
+                    sortable: true
+                },
+                {
+                    field: 'city',
+                    title: '城市',
+                    sortable: true
+                },
+                {
+                    field: 'weatherDay',
+                    title: '日间天气',
+                    sortable: true
+                },
+                {
+                    field: 'weatherNight',
+                    title: '夜间天气',
+                    sortable: true
+                },
+                {
+                    field: 'temperatureLow',
+                    title: '最低气温',
+                    sortable: true
+                },
+                {
+                    field: 'temperatureHigh',
+                    title: '最高气温',
+                    sortable: true
+                },
+                {
+                    field: 'windDirection',
+                    title: '风向',
+                    sortable: true
+                },
+                {
+                    field: 'windScale',
+                    title: '风力等级',
+                    sortable: true
+                },
+                {
+                    field: 'createTime',
+                    title: '创建时间',
+                    sortable: true
+                },
+                {
+                    title: '操作',
+                    align: 'center',
+                    formatter: function(value, row, index) {
+                        var actions = [];
+                        actions.push('<a class="btn btn-success btn-xs ' + editFlag + '" href="javascript:void(0)" onclick="$.operate.edit(\'' + row.id + '\')"><i class="fa fa-edit"></i>编辑</a> ');
+                        actions.push('<a class="btn btn-danger btn-xs ' + removeFlag + '" href="javascript:void(0)" onclick="$.operate.remove(\'' + row.id + '\')"><i class="fa fa-remove"></i>删除</a>');
+                        return actions.join('');
+                    }
+                }]
+            };
+            $.table.init(options);
+        });
+    </script>
+</body>
+</html>

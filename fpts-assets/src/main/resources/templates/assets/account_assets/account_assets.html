@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+    <th:block th:include="include :: header('查看资产列表')" />
+</head>
+<body class="gray-bg">
+     <div class="container-div">
+        <div class="row">
+            <div class="col-sm-12 search-collapse">
+                <form id="formId">
+                    <div class="select-list">
+                        <ul>
+                            <li>
+                                <label>用户ID：</label>
+                                <input type="text" name="userId"/>
+                            </li>
+                            <li>
+                                <label>账户ID：</label>
+                                <input type="text" name="accountId"/>
+                            </li>
+                            <li>
+                                <label>账户余额：</label>
+                                <input type="text" name="accountBalance"/>
+                            </li>
+                            <li>
+                                <label>总资产数：</label>
+                                <input type="text" name="totalAssets"/>
+                            </li>
+                            <li>
+                                <label>A股资产：</label>
+                                <input type="text" name="astockAssets"/>
+                            </li>
+                            <li>
+                                <label>B股资产：</label>
+                                <input type="text" name="bstockAssets"/>
+                            </li>
+                            <li>
+                                <label>债券资产：</label>
+                                <input type="text" name="bonfAssets"/>
+                            </li>
+                            <li>
+                                <label>基金资产：</label>
+                                <input type="text" name="fundAssets"/>
+                            </li>
+                            <li>
+                                <a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search()"><i class="fa fa-search"></i>&nbsp;搜索</a>
+                                <a class="btn btn-warning btn-rounded btn-sm" onclick="$.form.reset()"><i class="fa fa-refresh"></i>&nbsp;重置</a>
+                            </li>
+                        </ul>
+                    </div>
+                </form>
+            </div>
+
+            <div class="btn-group-sm" id="toolbar" role="group">
+                <a class="btn btn-success" onclick="printToChart()">
+                    <i class="fa fa-area-chart"></i> 统计图表
+                </a>
+                <a class="btn btn-danger multiple disabled" onclick="$.operate.removeAll()" shiro:hasPermission="assets:account_assets:remove">
+                    <i class="fa fa-remove"></i> 注销账户
+                </a>
+                <a class="btn btn-warning" onclick="$.table.exportExcel()" shiro:hasPermission="assets:account_assets:export">
+                    <i class="fa fa-download"></i> 导出
+                </a>
+                <a class="btn btn-info" onclick="printToHtml()">
+                    <i class="fa fa-bars"></i> 打印HTML
+                </a>
+            </div>
+            <div class="col-sm-12 select-table table-striped">
+                <table id="bootstrap-table"></table>
+            </div>
+        </div>
+    </div>
+    <th:block th:include="include :: footer" />
+    <script th:inline="javascript">
+        var editFlag = [[${@permission.hasPermi('assets:account_assets:edit')}]];
+        var removeFlag = [[${@permission.hasPermi('assets:account_assets:remove')}]];
+        var noDatas = [[${@dict.getType('${column.dictType}')}]];
+        var createByDatas = [[${@dict.getType('${column.dictType}')}]];
+        var createTimeDatas = [[${@dict.getType('${column.dictType}')}]];
+        var prefix = ctx + "assets/account_assets";
+
+        function printToHtml(){
+            $.modal.openFull(table.options.modalName + "打印", "/assets/account_assets/print");
+        }
+
+        function printToChart(){
+            console.log("打开统计图标");
+            $.modal.open("账户资产统计", "assets/account_assets/eCharts");
+        }
+
+        $(function() {
+            var options = {
+                url: prefix + "/list",
+                createUrl: prefix + "/add",
+                detailUrl: prefix + "/edit/{id}",
+                removeUrl: prefix + "/remove",
+                exportUrl: prefix + "/export",
+                modalName: "查看资产",
+                columns: [{
+                    checkbox: true
+                },
+                {
+                    field: 'no',
+                    title: '序号',
+                    visible: false
+                },
+                {
+                    field: 'userId',
+                    title: '用户ID',
+                    sortable: true
+                },
+                {
+                    field: 'accountId',
+                    title: '账户ID',
+                    sortable: true
+                },
+                {
+                    field: 'accountBalance',
+                    title: '账户余额',
+                    sortable: true
+                },
+                {
+                    field: 'totalAssets',
+                    title: '用户的资产数额',
+                    sortable: true
+                },
+                {
+                    field: 'astockAssets',
+                    title: 'A股总资产',
+                    sortable: true
+                },
+                {
+                    field: 'bstockAssets',
+                    title: 'B股总资产',
+                    sortable: true
+                },
+                {
+                    field: 'bonfAssets',
+                    title: '债券总资产',
+                    sortable: true
+                },
+                {
+                    field: 'fundAssets',
+                    title: '基金总资产',
+                    sortable: true
+                },
+                {
+                    title: '操作',
+                    align: 'center',
+                    formatter: function(value, row, index) {
+                        var actions = [];
+                        actions.push('<a class="btn btn-success btn-xs ' + editFlag + '" href="javascript:void(0)" onclick="$.operate.detail(\'' + row.no + '\')"><i class="fa fa-edit"></i>查看资产</a> ');
+                        actions.push('<a class="btn btn-info btn-xs ' + '" href="javascript:void(0)" onclick="addBalance(\'' + row.no + '\')"><i class="fa fa-credit-card"></i>充值余额</a>');
+                        actions.push('<a class="btn btn-warning btn-xs ' + '" href="javascript:void(0)" onclick="decreaseBalance(\'' + row.no + '\')"><i class="fa fa-credit-card-alt"></i>取出余额</a>');
+                        actions.push('<a class="btn btn-danger btn-xs ' + removeFlag + '" href="javascript:void(0)" onclick="$.operate.remove(\'' + row.no + '\')"><i class="fa fa-remove"></i>注销账户</a>');
+                        return actions.join('');
+                    }
+                }]
+            };
+            $.table.init(options);
+        });
+        function  addBalance(no) {
+            $.modal.open("填写充值的金额", "/assets/account_assets/addBalance/" + no);
+        }
+        function  decreaseBalance(no) {
+            $.modal.open("填写取出的金额", "/assets/account_assets/decreaseBalance/" + no);
+        }
+    </script>
+</body>
+</html>

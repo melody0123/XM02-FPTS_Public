@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="fpts-bank" />
+        <module name="fpts-generator" />
+        <module name="fpts-finance" />
+        <module name="fpts-admin" />
+        <module name="fpts-assets" />
+        <module name="fpts-transaction" />
+        <module name="fpts-framework" />
+        <module name="fpts-quartz" />
+        <module name="fpts-system" />
+        <module name="fpts-common" />
+      </profile>
+    </annotationProcessing>
+  </component>
+</project>
